@@ -1,10 +1,11 @@
-﻿from collections import deque
+﻿from collections import deque, defaultdict
 
 
 def bfs():
     Q = deque([(r, c)])
     area = 0
     perimeter = 0
+    directions = defaultdict(set)
 
     while Q:
         r2, c2 = Q.popleft()
@@ -20,12 +21,32 @@ def bfs():
                 Q.append((rr, cc))
             else:
                 perimeter += 1
-    return area * perimeter
+                directions[(dr, dc)].add((rr, cc))
+
+    sides = 0
+    for k, v in directions.items():
+        sides_seen = set()
+        for r2, c2 in v:
+            if (r2, c2) not in sides_seen:
+                sides += 1
+
+                Q = deque([(r2, c2)])
+                while Q:
+                    r3, c3 = Q.popleft()
+                    if (r3, c3) in sides_seen:
+                        continue
+                    sides_seen.add((r3, c3))
+                    for dr, dc in DIRS:
+                        rr, cc = r3 + dr, c3 + dc
+                        if (rr, cc) in v:
+                            Q.append((rr, cc))
+
+    return area * sides
 
 
 DIRS = [(-1, 0), (0, 1), (1, 0), (0, -1)]  # up right down left
 
-p1 = 0
+ans = 0
 D = open('input.txt').read().strip()
 
 G = D.split('\n')
@@ -38,6 +59,6 @@ for r in range(R):
     for c in range(C):
         if (r, c) in SEEN:
             continue
-        p1 += bfs()
+        ans += bfs()
 
-print(p1)
+print(ans)
