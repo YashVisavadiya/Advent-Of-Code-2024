@@ -1,54 +1,43 @@
 ﻿from collections import deque
 
 
-def read_input():
-    with open('input.txt', 'r', encoding='utf-8-sig') as f:
-        data = f.readlines()
+def bfs():
+    Q = deque([(r, c)])
+    area = 0
+    perimeter = 0
 
-        return [list(line.strip()) for line in data]
+    while Q:
+        r2, c2 = Q.popleft()
+        if (r2, c2) in SEEN:
+            continue
+        SEEN.add((r2, c2))
+        area += 1
 
-
-def bfs(i, j):
-    plant = G[i][j]
-    queue = deque([(i, j)])
-    cnt = 0
-    s = {(i, j)}
-    unq = {(i, j, -1)}
-    
-    while queue:
-        i, j = queue.popleft()
-        visited[i][j] = True
-
-        for ind, (dr, dc) in enumerate([(0, 1), (0, -1), (1, 0), (-1, 0)]):
-            nr, nc = i + dr, j + dc
-
-            if in_bounds(nr, nc) and G[nr][nc] == plant:
-                if (nr, nc, ind) not in unq:
-                    cnt += 1
-                    unq.add((nr, nc, ind))
-                if not visited[nr][nc]: 
-                    queue.append((nr, nc))
-                s.add((nr, nc))
-                # cnt += 1
-                visited[nr][nc] = True
-    
-    return len(s), cnt
+        for dr, dc in DIRS:
+            rr = r2 + dr
+            cc = c2 + dc
+            if 0 <= rr < R and 0 <= cc < C and G[rr][cc] == G[r2][c2]:
+                Q.append((rr, cc))
+            else:
+                perimeter += 1
+    return area * perimeter
 
 
-def in_bounds(i, j):
-    return R > i >= 0 <= j < C
+DIRS = [(-1, 0), (0, 1), (1, 0), (0, -1)]  # up right down left
 
+p1 = 0
+D = open('input.txt').read().strip()
 
-G = read_input()
-R, C = map(len, [G, G[0]])
-visited = [[False] * C for _ in range(R)]
-ans = 0
+G = D.split('\n')
+R = len(G)
+C = len(G[0])
+
+SEEN = set()
 
 for r in range(R):
     for c in range(C):
-        if not visited[r][c]:
-            plants, overlap = bfs(r, c)
-            # print(G[r][c], plants, overlap)
-            ans += plants * ((plants * 4) - overlap)
+        if (r, c) in SEEN:
+            continue
+        p1 += bfs()
 
-print(ans)
+print(p1)
