@@ -1,64 +1,65 @@
 ﻿from collections import deque, defaultdict
 
 
-def bfs():
-    Q = deque([(r, c)])
-    area = 0
-    perimeter = 0
-    directions = defaultdict(set)
+def read_input():
+    with open('input.txt') as f:
+        return f.read().strip().split('\n')
 
-    while Q:
-        r2, c2 = Q.popleft()
-        if (r2, c2) in SEEN:
-            continue
-        SEEN.add((r2, c2))
-        area += 1
 
-        for dr, dc in DIRS:
-            rr = r2 + dr
-            cc = c2 + dc
-            if 0 <= rr < R and 0 <= cc < C and G[rr][cc] == G[r2][c2]:
-                Q.append((rr, cc))
-            else:
-                perimeter += 1
-                directions[(dr, dc)].add((rr, cc))
-
-    sides = 0
-    for k, v in directions.items():
-        sides_seen = set()
-        for r2, c2 in v:
-            if (r2, c2) not in sides_seen:
-                sides += 1
-
-                Q = deque([(r2, c2)])
-                while Q:
-                    r3, c3 = Q.popleft()
-                    if (r3, c3) in sides_seen:
-                        continue
-                    sides_seen.add((r3, c3))
-                    for dr, dc in DIRS:
-                        rr, cc = r3 + dr, c3 + dc
-                        if (rr, cc) in v:
-                            Q.append((rr, cc))
-
-    return area * sides
+def dfs(i, j, plant, node):
+    if i in range(R) and j in range(C):
+        if (i, j) in cc:
+            return
+        if G[i][j] == plant:
+            cc[i, j] = node
+            for dr, dc in DIRS:
+                dfs(i + dr, j + dc, plant, node)
 
 
 DIRS = [(-1, 0), (0, 1), (1, 0), (0, -1)]  # up right down left
 
 ans = 0
-D = open('input.txt').read().strip()
-
-G = D.split('\n')
+G = read_input()
 R = len(G)
 C = len(G[0])
 
-SEEN = set()
+cc = {}
+part1 = part2 = 0
 
+node = 0
 for r in range(R):
     for c in range(C):
-        if (r, c) in SEEN:
-            continue
-        ans += bfs()
+        if (r, c) not in cc:
+            dfs(r, c, G[r][c], node)
+            node += 1
 
-print(ans)
+ccr = defaultdict(set)
+for k, v in cc.items():
+    ccr[v].add(k)
+
+for nodes in ccr.values():
+    area = len(nodes)
+    per1 = set()
+
+    for x, y in nodes:
+        for dx, dy in DIRS:
+            if x not in range(R) or y not in range(C) or (x + dx, y + dy) not in nodes:
+                per1.add(((x, y), (x + dx, y + dy)))
+
+    per2 = set()
+
+    for p1, p2 in per1:
+        keep = True
+        for dx, dy in [(0, 1), (1, 0)]:
+            n1 = (p1[0] + dx, p1[1] + dy)
+            n2 = (p2[0] + dx, p2[1] + dy)
+            if (n1, n2) in per1:
+                keep = False
+        if keep:
+            per2.add((p1, p2))
+
+    part1 += area * len(per1)
+    part2 += area * len(per2)
+
+print(part1)
+print(part2)
